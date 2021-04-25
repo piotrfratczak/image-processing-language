@@ -1,0 +1,61 @@
+program = {function_definition | comment};
+comment = "#", { ? any character ? }, ? carriage return ?;
+
+function_definition = id, "(", argument_list, ")", block;
+function_call = id, "(", argument_list, ")";
+argument_list = [ expression, {",", expression} ];
+
+if_statement = "if", "(", condition, ")", block , {"else", block};
+init_statement = type, "(", argument_list, ")", ";";
+return_statement = "return", expression, ";";
+block = statement | ( "{", {statement}, "}" );
+
+assignment = (id_or_member | matrix_lookup), assignment_operator, expression, ";";
+id_or_member = id, {member_operator, id}, [member_operator, matrix_lookup];
+member_reference = (id | function_call), {member_reference}, ";";
+member = member_operator, (id | function_call);
+
+operator_definition = new_operator, "(", id, of_operator, type, ",", id, of_operator, type, ")", block;
+matrix_lookup = id, "[", arithmetic_expression, {",", arithmetic_expression} "]";
+
+for_loop = "for", "(", expression, "in", expression, ")", block;
+while_loop = "while", "(", condition, ")", block;
+
+statement = operator_definition | for_loop | while_loop | if_statement | init_statement | return_statement | assignment | (function_call, ";") | comment;
+
+expression = multiplicative_expression, {additive_operator, mulitiplicative_expression};
+multiplicative_expression = base_expression, {mulitiplicative_operator, base_expression};
+base_expression = [subtraction_operator], (expression_in_parenthesis | number | matrix_lookup | function_call | member_reference);
+expression_in_parenthesis = "(", expression, ")";
+
+condition = and_condition, {alternative_operator, and_condition};
+and_condition = equality_condition, {conjunction_operator, equality_condition};
+equality_condition = relation_condition, [equal_operator, relation_condition];
+relation_condition = base_condition, [comparison_operator, base_condition];
+base_condition = [negation_operator], (condition_in_parenthesis | expression);
+condition_in_parenthesis = "(", condition, ")";
+
+(* nie mozna wstawiac bialych znakow miedzy elementami ponizszych produkcji *)
+
+id = alpha, {word};
+alpha = "a"..."z" | "A"..."Z";
+non_zero = "1"..."9";
+digit = "0" | non_zero;
+number = "0" | ( non_zero, {digit} );
+word = alpha | digit | "_";
+
+negation_operator = "!";
+member_operator = ".";
+alternative_operator = "or";
+conjunction_operator = "and"; 
+equal_operator = "==" | "!="; 
+matrix_mult_operator = "@";
+modulo_operator = "%";
+comparison_operator = "<" | ">" | "<=" | ">=";
+additive_operator = "+" | subtraction_operator;
+subtraction_operator = "-";
+multiplicative_operator = "*" | "/";
+assignment_operator = "=";
+of_operator = "of";
+new_operator = "newop";
+type = "pixel" | "matrix" | "number";
