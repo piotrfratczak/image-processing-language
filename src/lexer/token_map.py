@@ -19,10 +19,11 @@ class TokenMap:
     }
 
     operators = {
-        '!': TokenTypes.NOT,
+        '!': TokenTypes.NOT,    # TODO rozpoznawać switchem
         '<': TokenTypes.LESS_THAN,
         '>': TokenTypes.GREATER_THAN,
         '=': TokenTypes.ASSIGN,
+
         '+': TokenTypes.ADD,
         '-': TokenTypes.SUBTRACT,
         '*': TokenTypes.MULTIPLY,

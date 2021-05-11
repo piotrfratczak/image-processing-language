@@ -18,7 +18,7 @@ def test_is_eof():
     assert token.type == TokenTypes.EOT
 
 
-def test_build_id():
+def test_build_id(): # TODO rozbić testy
     id_test_helper('id')
     id_test_helper('id_')
     id_test_helper('id_compound')
@@ -48,7 +48,7 @@ def test_skip_whitespaces():
     assert token.value == 'a'
 
 
-def test_build_keyword():
+def test_build_keyword():   # TODO zrobic listę dla testów do sprawdzenia
     keyword_list = TokenMap.keywords.keys()
     keyword_file = ' '.join(keyword_list)
     lexer = new_lexer(keyword_file)

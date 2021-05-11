@@ -5,3 +5,4 @@ class Token:
         self.type = token_type
         self.position = position
         self.value = value
+# TODO pozycja w strumieniu, żeby pokazać kawałek kodu

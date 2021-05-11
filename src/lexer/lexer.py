@@ -3,7 +3,7 @@ from .token_map import TokenMap
 from .token_types import TokenTypes
 from ..exceptions.exceptions import *
 
-
+#limity jako arg lexer
 class Lexer:
     def __init__(self, source):
         self.__source = source
@@ -50,25 +50,25 @@ class Lexer:
             token_str = self.__source.char
             cur_char = self.get_next_char()
             while cur_char.isalpha() or cur_char.isdigit() or cur_char == '_':
-                token_str += cur_char
-                if len(token_str) > self.__ID_MAX_LENGTH:
+                token_str += cur_char   # TODO join
+                if len(token_str) > self.__ID_MAX_LENGTH:   # TODO sprawdzić wcześniej
                     raise IdTooLongException(self.__source.position)
                 cur_char = self.get_next_char()
 
             if token_str in TokenMap.keywords:
-                self.token = Token(TokenMap.keywords[token_str], self.__source.position)
+                self.token = Token(TokenMap.keywords[token_str], self.__source.position)    # TODO keywords.get - zwróci jeżeli coś jest albo None
             else:  # id
-                self.token = Token(TokenTypes.ID, self.__source.position, token_str)
+                self.token = Token(TokenTypes.ID, self.__source.position, token_str) # TODO zapamiętać początek tokenu
             return True
-        return False
+        return False    # TODO if not alfa return false
 
-    def build_comment(self):
+    def build_comment(self):    # TODO przypadek końca programu w komentarzu
         if self.__source.char == '#':
             comment_position = self.__source.position
             comment_str = '#'
             while self.get_next_char() != '\n':
                 comment_str += self.__source.char
-                if len(comment_str) > self.__COMMENT_MAX_LENGTH:
+                if len(comment_str) > self.__COMMENT_MAX_LENGTH:  # TODO sprawdzić wcześniej
                     raise CommentTooLongException(self.__source.position, comment_position)
 
             self.token = Token(TokenTypes.COMMENT, self.__source.position, comment_str)
@@ -78,11 +78,11 @@ class Lexer:
     def build_operator(self):
         if self.__source.char in TokenMap.operators.keys():
             operator_str = self.__source.char
-            self.token = Token(TokenMap.operators[operator_str], self.__source.position)
+            self.token = Token(TokenMap.operators[operator_str], self.__source.position)    # TODO .get
 
             operator_str += self.get_next_char()
-            if operator_str in TokenMap.compound_operators.keys():
-                self.token = Token(TokenMap.compound_operators[operator_str], self.__source.position)
+            if operator_str in TokenMap.compound_operators.keys():  # TODO wyrzucić operatory pojedyńcze  z operatorów jeżeli mają część wspólną
+                self.token = Token(TokenMap.compound_operators[operator_str], self.__source.position)   # TODO rezygnacja z mapy
                 self.get_next_char()
             return True
         return False
