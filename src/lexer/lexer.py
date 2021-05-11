@@ -1,23 +1,28 @@
 from .token import Token
-from .token_map import TokenMap
-from .token_types import TokenTypes
+from .keywords import *
+from .token_type import TokenType
 from ..exceptions.exceptions import *
 
-#limity jako arg lexer
+
 class Lexer:
-    def __init__(self, source):
+    def __init__(self, source, max_id_length=128, max_comment_length=512, max_number=pow(2, 128)):
         self.__source = source
         self.__source.next_char()
+
         self.token = None
-        self.__ID_MAX_LENGTH = 128
-        self.__COMMENT_MAX_LENGTH = 512
-        self.__MAX_NUMBER = pow(2, 128)
+        self._token_start_position = None
+        self._token_start_byte = None
+
+        self.__max_id_length = max_id_length
+        self.__max_comment_length = max_comment_length
+        self.__max_number = max_number
 
     def get_next_token(self):
         self.skip_whitespaces()
+        self.set_next_start_position()
 
         if self.is_eof():
-            return Token(TokenTypes.EOT, self.__source.position)
+            return self.construct_token(TokenType.EOT)
 
         if self.build_number():
             return self.token
@@ -28,72 +33,94 @@ class Lexer:
         if self.build_operator():
             return self.token
 
-        self.token = Token(TokenTypes.UNKNOWN, self.__source.position)
+        self.token = self.construct_token(TokenType.UNKNOWN)
         return self.token
 
     def build_number(self):
-        if self.__source.char.isdigit():
-            value = 0
-            if self.__source.char != '0':
-                value = int(self.__source.char)
-                while self.get_next_char().isdigit():
-                    value = value*10 + int(self.__source.char)
-                    if value > self.__MAX_NUMBER:
-                        raise NumberTooLargeException(self.__source.position, value)
+        if not self.__source.char.isdigit():
+            return False
 
-            self.token = Token(TokenTypes.NUMBER, self.__source.position, value)
-            return True
-        return False
+        value = 0
+        if self.__source.char != '0':
+            value = int(self.__source.char)
+            while self.get_next_char().isdigit():
+                if value > self.__max_number:
+                    raise NumberTooLargeException(self.__source.position, value)
+                value = value*10 + int(self.__source.char)
+
+        self.token = self.construct_token(TokenType.NUMBER, value)
+        return True
 
     def build_keyword_or_id(self):
-        if self.__source.char.isalpha():
-            token_str = self.__source.char
+        if not self.__source.char.isalpha():
+            return False
+
+        token_chars = [self.__source.char]
+        cur_char = self.get_next_char()
+        while cur_char.isalpha() or cur_char.isdigit() or cur_char == '_':
+            if len(token_chars) == self.__max_id_length:
+                raise IdTooLongException(self.__source.position)
+            token_chars.append(cur_char)
             cur_char = self.get_next_char()
-            while cur_char.isalpha() or cur_char.isdigit() or cur_char == '_':
-                token_str += cur_char   # TODO join
-                if len(token_str) > self.__ID_MAX_LENGTH:   # TODO sprawdzić wcześniej
-                    raise IdTooLongException(self.__source.position)
-                cur_char = self.get_next_char()
+        token_str = ''.join(token_chars)
 
-            if token_str in TokenMap.keywords:
-                self.token = Token(TokenMap.keywords[token_str], self.__source.position)    # TODO keywords.get - zwróci jeżeli coś jest albo None
-            else:  # id
-                self.token = Token(TokenTypes.ID, self.__source.position, token_str) # TODO zapamiętać początek tokenu
-            return True
-        return False    # TODO if not alfa return false
+        token_keyword = get_keyword(token_str)
+        if token_keyword:  # keyword
+            self.token = self.construct_token(token_keyword)
+        else:  # id
+            self.token = self.construct_token(TokenType.ID, token_str)
+        return True
 
-    def build_comment(self):    # TODO przypadek końca programu w komentarzu
-        if self.__source.char == '#':
-            comment_position = self.__source.position
-            comment_str = '#'
-            while self.get_next_char() != '\n':
-                comment_str += self.__source.char
-                if len(comment_str) > self.__COMMENT_MAX_LENGTH:  # TODO sprawdzić wcześniej
-                    raise CommentTooLongException(self.__source.position, comment_position)
+    def build_comment(self):
+        if not self.__source.char == '#':
+            return False
 
-            self.token = Token(TokenTypes.COMMENT, self.__source.position, comment_str)
-            return True
-        return False
+        comment_chars = ['#']
+        while self.get_next_char() != '\n' and not self.is_eof():
+            if len(comment_chars) > self.__max_comment_length:
+                raise CommentTooLongException(self.__source.position, self._token_start_position)
+            comment_chars.append(self.__source.char)
+        comment_str = ''.join(comment_chars)
+
+        self.token = self.construct_token(TokenType.COMMENT, comment_str)
+        return True
 
     def build_operator(self):
-        if self.__source.char in TokenMap.operators.keys():
-            operator_str = self.__source.char
-            self.token = Token(TokenMap.operators[operator_str], self.__source.position)    # TODO .get
+        first_char = self.__source.char
+        two_chars = first_char + self.get_next_char()
 
-            operator_str += self.get_next_char()
-            if operator_str in TokenMap.compound_operators.keys():  # TODO wyrzucić operatory pojedyńcze  z operatorów jeżeli mają część wspólną
-                self.token = Token(TokenMap.compound_operators[operator_str], self.__source.position)   # TODO rezygnacja z mapy
-                self.get_next_char()
+        simple_operator = get_operator(first_char)
+        if simple_operator:
+            self.token = self.construct_token(simple_operator)
             return True
+
+        compound_operator = get_compound_operator(two_chars)
+        if compound_operator:
+            self.token = self.construct_token(compound_operator)
+            self.get_next_char()
+            return True
+
+        simple_comparison_operator = get_compound_operator(first_char)
+        if simple_comparison_operator:
+            self.token = self.construct_token(simple_comparison_operator)
+            return True
+
         return False
 
     def skip_whitespaces(self):
         while self.__source.char.isspace():
             self.__source.next_char()
 
+    def set_next_start_position(self):
+        self._token_start_position = self.__source.position
+        self._token_start_byte = self.__source.byte
+
+    def construct_token(self, token_type, value=None):
+        return Token(token_type, self._token_start_position, self._token_start_byte, value)
+
     def get_next_char(self):
         self.__source.next_char()
         return self.__source.char
 
     def is_eof(self):
-        return self.__source.char == '' or self.__source.char is None
+        return self.__source.is_eof or self.__source.char is None

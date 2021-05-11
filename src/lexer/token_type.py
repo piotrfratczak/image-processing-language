@@ -1,7 +1,7 @@
 from enum import Enum, auto
 
 
-class TokenTypes(Enum):
+class TokenType(Enum):
     ID = auto()
     COMMENT = auto()
     EOT = auto()

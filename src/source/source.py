@@ -1,3 +1,4 @@
+from os import linesep
 from .position import Position
 
 
@@ -7,24 +8,25 @@ class Source:
         self.byte = None
         self.position = None
         self.char = None
+        self.is_eof = False
 
     def next_char(self):
         pass
 
 
-class FileSource(Source):   # TODO tell() seek()
+class FileSource(Source):
     def __init__(self, file):
         super(FileSource, self).__init__(file)
-        self.byte = 0
         self.position = Position()
+        self.byte = 0
 
     def next_char(self):
         self.char = self.source_stream.read(1)
-        self.byte += 1  # TODO jak eof
-                        # TODO 1 znak != 1 bajt + test
-        if self.char == '\n':
+        self.byte = self.source_stream.tell()
+
+        if self.char == '':
+            self.is_eof = True
+        elif self.char == linesep:
             self.position.next_line()
         else:
             self.position.next_column()
-# TODO co jest uznawane za znak nowej linii w róznych systemach
-# TODO trzymać pozycję w strumieniu - byte
