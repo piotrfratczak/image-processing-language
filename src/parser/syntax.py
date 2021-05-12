@@ -5,6 +5,10 @@ class ArgumentList:
     def ___init__(self, expressions:List[any]):
         self.expressions = expressions
 
+class ValueExpression: # może się nie przeydać
+    pass
+# interfejs do ewaluacji (nie jest konieczny, dla wizytora)
+# usunąć typowania
 
 class ExpressionInParenthesis:
     def __init__(self, expression):
@@ -12,18 +16,8 @@ class ExpressionInParenthesis:
 
 
 class BaseExpression:
-    def __init__(self, subtract_operator:bool=False,
-                       expression_in_parenthesis:ExpressionInParenthesis=None,
-                       number:int=None,
-                       matrix=None,
-                       matrix3d=None,
-                       reference_or_call=None):
-        self.subtract_operator = subtract_operator
-        self.expression_in_parenthesis = expression_in_parenthesis
-        self.number = number
-        self.matrix = matrix
-        self.matrix3d = matrix3d
-        self.reference_or_call = reference_or_call
+    def __init__(self, expression:Expression, subtract_operator:bool=False):
+        self.expression = expression
 
 
 class MultiplicativeExpression:

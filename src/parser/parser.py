@@ -7,21 +7,21 @@ class Parser:
     def __init__(self, lexer):
         self.program = None
         self.__lexer = lexer
-        self._token = self.get_next_token()
+        self._token = None
+        self.get_next_token()
 
     def parse_program(self):
         function_definitions = []
         comments = []
 
         definition = self.parse_function_definition()
-        comment = self.parse_comment()
-        while definition or comment:
+        while definition or self._token.type == TokenType.COMMENT:
             if definition:
                 function_definitions.append(definition)
             else:
-                comments.append(comment)
+                comments.append(self._token.value)
+                self.get_next_token()
             definition = self.parse_function_definition()
-            comment = self.parse_comment()
         self.program = Program(function_definitions, comments)
 
     def parse_function_definition(self):
@@ -32,8 +32,10 @@ class Parser:
         self.get_next_token()
         if self._token.type == TokenType.L_PARENTHESIS:
             self.get_next_token()
-            parameters = self.parse_argument_list()
+            parameters = self.parse_parameter_list()
             if parameters:
+                #ExceptionIfNot(TokenType.R_PARENTHESIS, "Brk ....")
+                #refaktoryzacja -> w każdej linijce albo dalej albo exception jap f. poniżej
                 if self._token.type == TokenType.R_PARENTHESIS:
                     self.get_next_token()
                     block = self.parse_block()
@@ -56,18 +58,16 @@ class Parser:
         statement = self.parse_if_statement()
         if statement:
             return statement
-        statement = self.parse_init_statement()
-        if statement:
-            return statement
         statement = self.parse_return_statement()
         if statement:
             return statement
         statement = self.parse_assignment_or_call()
         if statement:
             return statement
-        statement = self.parse_comment()
-        if statement:
-            return statement
+        if self._token.type == TokenType.COMMENT:
+            comment = self._token.value
+            self.get_next_token()
+            return comment
         return None
 
     def parse_reference_or_call(self):
@@ -178,7 +178,7 @@ class Parser:
             if statement:
                 return Block([statement])
         return None
-        
+
     def parse_assignment_or_call(self):
         if self._token.type == TokenType.ID:
             _id = self._token.value
@@ -190,7 +190,7 @@ class Parser:
                     self.get_next_token()
                     return function_call
                 self.raise_syntax_error()
-            
+
             reference = self.parse_reference(_id)
             assignment = self.parse_assignment(_id, reference)
             if assignment:
@@ -209,7 +209,7 @@ class Parser:
                 return Reference(id1, id2)
             self.raise_syntax_error()
         return None
-    
+
     def parse_assignment(self, _id=None, reference=None):
         if self._token.type == TokenType.ASSIGN:
             self.get_next_token()
@@ -260,7 +260,8 @@ class Parser:
                                     if self._token.type == TokenType.OF:
                                         self.get_next_token()
                                         type2 = self._token.type
-                                        if type2 == TokenType.NUMBER or type2 == TokenType.PIXEL or type2 == TokenType.MATRIX:
+                                        if type2 == TokenType.NUMBER or type2 == TokenType.PIXEL \
+                                                or type2 == TokenType.MATRIX:
                                             self.get_next_token()
                                             if self._token.type == TokenType.R_PARENTHESIS:
                                                 self.get_next_token()
@@ -325,6 +326,8 @@ class Parser:
             self.raise_syntax_error()
         return None
 
+    # { [1,2,3; 2,3,4;], [] }
+
     def parse_matrix(self):
         if self._token.type == TokenType.L_BRACKET:
             self.get_next_token()
@@ -344,47 +347,49 @@ class Parser:
 
     def parse_expression(self):
         expression = self.parse_multiplicative_expression()
-        if expression:
-            expressions = []
-            operators = []
-            expressions.append(expression)
-            operator = self._token.type
-            while operator == TokenType.ADD or operator == TokenType.SUBTRACT:
+        if expression is None:
+            return None
+        expressions = []
+        operators = []
+        expressions.append(expression)
+        operator = self._token.type
+        while operator == TokenType.ADD or operator == TokenType.SUBTRACT:
+            self.get_next_token()
+            expression = self.parse_multiplicative_expression()
+            if expression:
                 operators.append(operator)
-                self.get_next_token()
-                expression = self.parse_multiplicative_expression()
-                if expression:
-                    expressions.append(expression)
-                else:
-                    self.raise_syntax_error()
-                operator = self._token.type
-            if len(operators) == 0:
-                return expression(expressions)
+                expressions.append(expression)
             else:
-                return Expression(expressions, operators)
-        return None
+                self.raise_syntax_error()
+            operator = self._token.type
+        if len(operators) == 0:
+            return expressions[0]
+        else:
+            return Expression(expressions, operators)
+
 
     def parse_multiplicative_expression(self):
         expression = self.parse_base_expression()
-        if expression:
-            expressions = []
-            operators = []
-            expressions.append(expression)
-            operator = self._token.type
-            while operator == TokenType.MULTIPLY or operator == TokenType.DIVIDE:
-                operators.append(operator)
-                self.get_next_token()
-                expression = self.parse_base_expression()
-                if expression:
-                    expressions.append(expression)
-                else:
-                    self.raise_syntax_error()
-                operator = self._token.type
-            if len(operators) == 0:
-                return expression(expressions)
+        if expression is None:
+            return None
+        expressions = []
+        operators = []
+        expressions.append(expression)
+        operator = self._token.type
+        while operator == TokenType.MULTIPLY or operator == TokenType.DIVIDE:
+            self.get_next_token()
+            expression = self.parse_base_expression()
+            if expression:
+                operators.append(operator) # dodawanie do listy razem
+                expressions.append(expression)
             else:
-                return Expression(expressions, operators)
-        return None
+                self.raise_syntax_error()
+            operator = self._token.type
+        if len(operators) == 0:
+            return expressions[0]
+        else:
+            return Expression(expressions, operators)
+
 
     def parse_base_expression(self):
         subtraction = self._token.type == TokenType.SUBTRACT
@@ -403,6 +408,9 @@ class Parser:
         matrix3d = self.parse_matrix3d()
         if matrix3d:
             return BaseExpression(subtraction, matrix3d=matrix3d)
+        init_statement = self.parse_init_statement()
+        if init_statement:
+            return BaseExpression(subtraction, init_statement=init_statement)
         reference_or_call = self.parse_reference_or_call()
         if reference_or_call:
             return BaseExpression(subtraction, reference_or_call=reference_or_call)
@@ -439,8 +447,7 @@ class Parser:
     def parse_and_condition(self):
         condition = self.parse_equality_condition()
         if condition:
-            conditions = []
-            conditions.append(condition)
+            conditions = [condition]
             while self._token.type == TokenType.AND:
                 self.get_next_token()
                 condition = self.parse_equality_condition()
@@ -467,7 +474,8 @@ class Parser:
         condition1 = self.parse_base_condition()
         if condition1:
             operator = self._token.type
-            if operator == TokenType.LESS_THAN or operator == TokenType.LESS_OR_EQUAL or operator == TokenType.GREATER_THAN or operator == TokenType.GREATER_OR_EQUAL:
+            if operator == TokenType.LESS_THAN or operator == TokenType.LESS_OR_EQUAL \
+                    or operator == TokenType.GREATER_THAN or operator == TokenType.GREATER_OR_EQUAL:
                 self.get_next_token()
                 condition2 = self.parse_base_condition()
                 if not condition2:
@@ -501,7 +509,7 @@ class Parser:
         return None
 
     def raise_syntax_error(self):
-        raise SyntaxError(self._token_start_position, self._token_start_byte)
+        raise SyntaxError(self.__lexer.token_start_position, self.__lexer.token_start_byte)
 
     def get_next_token(self):
         self._token = self.__lexer.get_next_token()
