@@ -10,8 +10,8 @@ class Lexer:
         self.__source.next_char()
 
         self.token = None
-        self._token_start_position = None
-        self._token_start_byte = None
+        self.token_start_position = None
+        self.token_start_byte = None
 
         self.__max_id_length = max_id_length
         self.__max_comment_length = max_comment_length
@@ -72,13 +72,13 @@ class Lexer:
         return True
 
     def build_comment(self):
-        if not self.__source.char == '#':
+        if self.__source.char != '#':
             return False
 
         comment_chars = ['#']
         while self.get_next_char() != '\n' and not self.is_eof():
             if len(comment_chars) > self.__max_comment_length:
-                raise CommentTooLongException(self.__source.position, self._token_start_position)
+                raise CommentTooLongException(self.__source.position, self.token_start_position)
             comment_chars.append(self.__source.char)
         comment_str = ''.join(comment_chars)
 
@@ -112,11 +112,11 @@ class Lexer:
             self.__source.next_char()
 
     def set_next_start_position(self):
-        self._token_start_position = self.__source.position
-        self._token_start_byte = self.__source.byte
+        self.token_start_position = self.__source.position
+        self.token_start_byte = self.__source.byte
 
     def construct_token(self, token_type, value=None):
-        return Token(token_type, self._token_start_position, self._token_start_byte, value)
+        return Token(token_type, self.token_start_position, self.token_start_byte, value)
 
     def get_next_char(self):
         self.__source.next_char()

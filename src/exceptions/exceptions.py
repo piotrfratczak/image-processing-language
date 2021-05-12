@@ -25,3 +25,10 @@ class CommentTooLongException(Exception):
                                                                                     self.__position.line,
                                                                                     self.__position.column)
         super().__init__(self.__message)
+
+
+class SyntaxError(Exception):
+    def __init__(self, position, byte):
+        self.__position = position
+        self.__byte = byte
+        self.__message = "Syntax error"
