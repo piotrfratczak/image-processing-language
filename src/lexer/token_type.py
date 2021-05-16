@@ -3,6 +3,7 @@ from enum import Enum, auto
 
 class TokenType(Enum):
     ID = auto()
+    NUMBER = auto()
     COMMENT = auto()
     EOT = auto()
     UNKNOWN = auto()
@@ -18,7 +19,7 @@ class TokenType(Enum):
     ELSE = auto()
     RETURN = auto()
 
-    NUMBER = auto()
+    NUMBER_TYPE = auto()
     PIXEL = auto()
     MATRIX = auto()
 

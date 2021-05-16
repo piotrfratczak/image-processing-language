@@ -47,6 +47,8 @@ class Lexer:
                 if value > self.__max_number:
                     raise NumberTooLargeException(self.__source.position, value)
                 value = value*10 + int(self.__source.char)
+        else:
+            self.get_next_char()
 
         self.token = self.construct_token(TokenType.NUMBER, value)
         return True

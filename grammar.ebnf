@@ -1,4 +1,4 @@
-program                   = {function_definition | comment};
+program                   = {function_definition | operator_definition | comment};
 comment                   = "#", { ? any character ? }, ? carriage return ?;
 
 statement                 = operator_definition | for_loop | while_loop | if_statement | return_statement | assignment_or_call | comment;
@@ -10,7 +10,7 @@ rest_of_function_call     = "(", argument_list, ")";
 argument_list             = [ expression, {",", expression} ];
 parameter_list            = [ id, {",", id} ];
 
-if_statement              = "if", "(", condition, ")", block , {"else", block};
+if_statement              = "if", "(", condition, ")", block , ["else", block];
 init_statement            = type, "(", argument_list, ")", ";";
 return_statement          = "return", [expression], ";";
 block                     = statement | ( "{", {statement}, "}" );
@@ -19,32 +19,28 @@ assignment_or_call        = id, ( rest_of_function_call | ([rest_of_reference], 
 rest_of_assignment        = assignment_operator, expression;
 matrix_lookup             = "[", expression, {",", expression}, "]";
 rest_of_reference         = member_operator, id ;
-operator_definition       = new_operator, "(", id, of_operator, type, ",", id, of_operator, type, ")", block;
+operator_definition       = new_operator, "(", id, ",", id, of_operator, type, ",", id, of_operator, type, ")", block;
 
 for_loop                  = "for", "(", id, "in", expression, ")", block;
 while_loop                = "while", "(", condition, ")", block;
 
 matrix3d                  = "{", matrix, {",", matrix}, "}";
 matrix                    = "[", {row}, "]";
-row                       = argument_list, ";"; (* niepusty *)
+row                       = argument_list, ";"; (* list cannot be empty *)
 
 expression                = multiplicative_expression, {additive_operator, mulitiplicative_expression};
 multiplicative_expression = base_expression, {mulitiplicative_operator, base_expression};
 base_expression           = [subtraction_operator], (expression_in_parenthesis | number | matrix | matrix3d | init_statement | reference_or_call);
 expression_in_parenthesis = "(", expression, ")";
 
-# do przemyślenia
 condition                 = and_condition, {alternative_operator, and_condition};
-and_condition             = equality_condition, {conjunction_operator, equality_condition};
-
-comparison_condition = base_condition, comparison_operator, base_condition
-
-equality_condition        = relation_condition, [equal_operator, relation_condition];
-relation_condition        = base_condition, [comparison_operator, base_condition];
+and_condition             = comparison_condition, {conjunction_operator, comparison_condition};
+comparison_condition      = base_condition, [comparison_operator, base_condition];
 base_condition            = [negation_operator], (condition_in_parenthesis | expression);
 condition_in_parenthesis  = "(", condition, ")";
 
 (* nie mozna wstawiac bialych znakow miedzy elementami ponizszych produkcji *)
+(* no whitespaces between characters of the elements below *)
 
 id                      = alpha, {word};
 alpha                   = "a"..."z" | "A"..."Z";
@@ -56,11 +52,10 @@ word                    = alpha | digit | "_";
 negation_operator       = "!";
 member_operator         = ".";
 alternative_operator    = "or";
-conjunction_operator    = "and"; 
-equal_operator          = "==" | "!="; 
+conjunction_operator    = "and";
 matrix_mult_operator    = "@";
 modulo_operator         = "%";
-comparison_operator     = "<" | ">" | "<=" | ">=";
+comparison_operator     = "<" | ">" | "<=" | ">=" | "==" | "!=";
 additive_operator       = "+" | subtraction_operator;
 subtraction_operator    = "-";
 multiplicative_operator = "*" | "/";

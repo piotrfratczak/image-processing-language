@@ -13,7 +13,7 @@ def get_keyword(token_str):
         'newop': TokenType.NEW_OPERATOR,
         'else': TokenType.ELSE,
         'return': TokenType.RETURN,
-        'number': TokenType.NUMBER,
+        'number': TokenType.NUMBER_TYPE,
         'pixel': TokenType.PIXEL,
         'matrix': TokenType.MATRIX
     }
