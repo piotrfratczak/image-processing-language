@@ -423,7 +423,7 @@ def test_if_else_if_statement():
     assert isinstance(if_statement.else_block.statements[0], IfStatement)
 
 
-def test_if_else_if_else_statement(): # TODO
+def test_if_else_if_else_statement():
     parser = new_parser('if (a > b) {'
                         '   a = 100;'
                         '} else if (a == b) {'
