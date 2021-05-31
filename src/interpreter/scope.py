@@ -22,7 +22,7 @@ class Scope:
 
 
 class ScopeManager:
-    def __init__(self):
+    def __init__(self):# manage scope tree/list - stos
         self.global_scope = Scope('global')
         self.local_scope = Scope('main')
         self.last_result: Optional[int, PixelVariable, MatrixVariable, List[MatrixVariable]] = None
