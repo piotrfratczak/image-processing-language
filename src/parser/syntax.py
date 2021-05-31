@@ -1,41 +1,74 @@
 from typing import List
+from ..interpreter.interpreter import Interpreter
 
 
-class ExpressionInParenthesis:
+class Node:
+    def accept(self, visitor: Interpreter):
+        pass
+
+
+class ExpressionInParenthesis(Node):
     def __init__(self, expression):
         self.expression = expression
 
+    def accept(self, visitor: Interpreter):
+        visitor.visit_expression_in_parenthesis(self)
 
-class BaseExpression:
+
+class BaseExpression(Node):
     def __init__(self, expression, subtract_operator: bool = False):
         self.expression = expression
         self.subtract_operator = subtract_operator
 
+    def accept(self, visitor: Interpreter):
+        visitor.visit_base_expression(self)
 
-class MultiplicativeExpression:
+
+class MultiplicativeExpression(Node):
     def __init__(self, base_expressions, multiplicative_operators=None):
         self.base_expressions = base_expressions
         self.multiplicative_operators = multiplicative_operators
 
+    def accept(self, visitor: Interpreter):
+        visitor.visit_multiplicative_expression(self)
 
-class Expression:
+
+class AdditiveExpression(Node):
     def __init__(self, multiplicative_expressions, additive_operators=None):
         self.multiplicative_expressions = multiplicative_expressions
         self.additive_operators = additive_operators
 
+    def accept(self, visitor: Interpreter):
+        visitor.visit_additive_expression(self)
 
-class ConditionInParenthesis:
+
+class Expression(Node):
+    def __init__(self, additive_expressions, new_operators: List[str] = None):
+        self.additive_expressions = additive_expressions
+        self.new_operators = new_operators
+
+    def accept(self, visitor: Interpreter):
+        visitor.visit_expression(self)
+
+
+class ConditionInParenthesis(Node):
     def __init__(self, condition):
         self.condition = condition
 
+    def accept(self, visitor: Interpreter):
+        visitor.visit_condition_in_parenthesis(self)
 
-class BaseCondition:
+
+class BaseCondition(Node):
     def __init__(self, expression, negation_operator: bool = False):
         self.negation_operator = negation_operator
         self.expression = expression
 
+    def accept(self, visitor: Interpreter):
+        visitor.visit_base_condition(self)
 
-class ComparisonCondition:
+
+class ComparisonCondition(Node):
     def __init__(self, base_condition: BaseCondition,
                  comparison_operator=None,
                  base_condition2: BaseCondition = None):
@@ -43,51 +76,79 @@ class ComparisonCondition:
         self.comparison_operator = comparison_operator
         self.base_condition2 = base_condition2
 
+    def accept(self, visitor: Interpreter):
+        visitor.visit_comparison_condition(self)
 
-class AndCondition:
+
+class AndCondition(Node):
     def __init__(self, comparison_conditions: List[ComparisonCondition]):
         self.comparison_conditions = comparison_conditions
 
+    def accept(self, visitor: Interpreter):
+        visitor.visit_and_condition(self)
 
-class Condition:
+
+class Condition(Node):
     def __init__(self, and_conditions: List[AndCondition]):
         self.and_conditions = and_conditions
 
+    def accept(self, visitor: Interpreter):
+        visitor.visit_condition(self)
 
-class ArgumentList:
+
+class ArgumentList(Node):
     def __init__(self, expressions: List[Expression]):
         self.expressions = expressions
+        self.length = len(expressions)
+
+    def accept(self, visitor: Interpreter):
+        visitor.visit_argument_list(self)
 
 
-class Matrix:
+class Matrix(Node):
     def __init__(self, rows: List[ArgumentList]):
         self.rows = rows
 
+    def accept(self, visitor: Interpreter):
+        visitor.visit_matrix(self)
 
-class Matrix3d:
+
+class Matrix3d(Node):
     def __init__(self, matrices: List[Matrix]):
         self.matrices = matrices
 
+    def accept(self, visitor: Interpreter):
+        visitor.visit_matrix3d(self)
 
-class Block:
+
+class Block(Node):
     def __init__(self, statements):
         self.statements = statements
 
+    def accept(self, visitor: Interpreter):
+        visitor.visit_block(self)
 
-class WhileLoop:
+
+class WhileLoop(Node):
     def __init__(self, condition: Condition, block: Block):
         self.condition = condition
         self.block = block
 
+    def accept(self, visitor: Interpreter):
+        visitor.visit_while_loop(self)
 
-class ForLoop:
+
+class ForLoop(Node):
     def __init__(self, iterator: str, expression: Expression, block: Block):
         self.iterator = iterator
         self.expression = expression
         self.block = block
 
+    def accept(self, visitor: Interpreter):
+        visitor.visit_for_loop(self)
 
-class OperatorDefinition:
+
+class OperatorDefinition(Node):
     def __init__(self, operator: str, id1: str, type1, id2: str, type2, block: Block):
         self.operator = operator
         self.id1 = id1
@@ -95,62 +156,93 @@ class OperatorDefinition:
         self.id2 = id2
         self.type2 = type2
         self.block = block
+        self.parameter_list = [id1, id2]
+
+    def accept(self, visitor: Interpreter):
+        visitor.visit_operator_definition(self)
 
 
-class ReturnStatement:
+class ReturnStatement(Node):
     def __init__(self, expression: Expression = None):
         self.expression = expression
 
+    def accept(self, visitor: Interpreter):
+        visitor.visit_return_statement(self)
 
-class InitStatement:
+
+class InitStatement(Node):
     def __init__(self, _type, argument_list: ArgumentList):
         self.type = _type
         self.argument_list = argument_list
 
+    def accept(self, visitor: Interpreter):
+        visitor.visit_init_statement(self)
 
-class IfStatement:
+
+class IfStatement(Node):
     def __init__(self, condition: Condition, block: Block, else_block: Block = None):
         self.condition = condition
         self.block = block
         self.else_block = else_block
 
+    def accept(self, visitor: Interpreter):
+        visitor.visit_if_statement(self)
 
-class FunctionDefinition:
+
+class FunctionDefinition(Node):
     def __init__(self, _id: str,  parameter_list: List[str], block: Block):
         self.id = _id
         self.parameter_list = parameter_list
         self.block = block
 
+    def accept(self, visitor: Interpreter):
+        visitor.visit_function_definition(self)
 
-class MatrixLookup:
+
+class MatrixLookup(Node):
     def __init__(self, _id: str, indices: List[Expression]):
         self.id = _id
         self.indices = indices
 
+    def accept(self, visitor: Interpreter):
+        visitor.visit_matrix_lookup(self)
 
-class Reference:
+
+class Reference(Node):
     def __init__(self, id1: str, id2: str = None):
         self.id1 = id1
         self.id2 = id2
 
+    def accept(self, visitor: Interpreter):
+        visitor.visit_reference(self)
 
-class Assignment:
+
+class Assignment(Node):
     def __init__(self, expression: Expression, _id: str = None, reference: Reference = None):
         self.id = _id
         self.reference = reference
         self.expression = expression
 
+    def accept(self, visitor: Interpreter):
+        visitor.visit_assignment(self)
+
     
-class FunctionCall:
+class FunctionCall(Node):
     def __init__(self, _id: str, argument_list: ArgumentList):
         self.id = _id
         self.argument_list = argument_list
 
+    def accept(self, visitor: Interpreter):
+        visitor.visit_function_call(self)
 
-class Program:
+
+class Program(Node):
     def __init__(self, function_definitions: List[FunctionDefinition] = None,
                  operator_definitions: List[OperatorDefinition] = None,
                  comments: List[str] = None):
         self.function_definitions = function_definitions
         self.operator_definitions = operator_definitions
         self.comments = comments
+
+    def accept(self, visitor: Interpreter):
+        visitor.visit_program(self)

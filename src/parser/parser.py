@@ -300,6 +300,28 @@ class Parser:
         return Matrix(rows)
 
     def parse_expression(self):
+        expression = self.parse_additive_expression()
+        if expression is None:
+            return None
+
+        expressions = []
+        operators = []
+        expressions.append(expression)
+        operator = self._token
+        while operator.type == TokenType.ID:
+            self.get_next_token()
+            expression = self.parse_additive_expression()
+            self.try_or_exception(expression,
+                                  "Expression is missing arguments after {} operator".format(operator.value))
+            operators.append(operator.value)
+            expressions.append(expression)
+            operator = self._token
+        if len(operators) == 0:
+            return expressions[0]
+        else:
+            return Expression(expressions, operators)
+
+    def parse_additive_expression(self):
         expression = self.parse_multiplicative_expression()
         if expression is None:
             return None
@@ -318,7 +340,7 @@ class Parser:
         if len(operators) == 0:
             return expressions[0]
         else:
-            return Expression(expressions, operators)
+            return AdditiveExpression(expressions, operators)
 
     def parse_multiplicative_expression(self):
         expression = self.parse_base_expression()
@@ -329,7 +351,7 @@ class Parser:
         operators = []
         expressions.append(expression)
         operator = self._token.type
-        while operator == TokenType.MULTIPLY or operator == TokenType.DIVIDE:
+        while operator == TokenType.MULTIPLY or operator == TokenType.DIVIDE or operator == TokenType.SPECIAL_MULTIPLY:
             self.get_next_token()
             expression = self.parse_base_expression()
             self.try_or_exception(expression, "Expression is missing arguments after an operator")

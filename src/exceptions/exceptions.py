@@ -34,3 +34,47 @@ class SyntaxException(Exception):
         self.__message = "Syntax Exception. {} at: {}, {}.".format(message,
                                                                    self.__position.line,
                                                                    self.__position.column)
+
+
+class UndeclaredSymbolError(Exception):
+    def __init__(self, name: str):
+        self.__name = name
+
+
+class OverwriteError(Exception):
+    def __init__(self, name: str):
+        self.__name = name
+
+
+class TypeMismatchError(Exception):
+    def __init__(self, name: str):
+        self.__name = name
+
+
+class NoParentScopeError(Exception):
+    def __init__(self, name: str):
+        self.__name = name
+
+
+class NoMainFunctionException(Exception):
+    pass
+
+
+class ArgumentTypeException(Exception):
+    pass
+
+
+class InvalidVariableTypeException(Exception):
+    pass
+
+
+class IllicitOperatorException(Exception):
+    pass
+
+
+class InvalidArgumentsNumberException(Exception):
+    pass
+
+
+class MatrixDimensionsException(Exception):
+    pass

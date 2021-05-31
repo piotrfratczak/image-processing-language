@@ -28,7 +28,8 @@ matrix3d                  = "{", matrix, {",", matrix}, "}";
 matrix                    = "[", {row}, "]";
 row                       = argument_list, ";"; (* list cannot be empty *)
 
-expression                = multiplicative_expression, {additive_operator, mulitiplicative_expression};
+expression                = additive_expression, {id, additive_expression};
+additive_expression       = multiplicative_expression, {additive_operator, mulitiplicative_expression};
 multiplicative_expression = base_expression, {mulitiplicative_operator, base_expression};
 base_expression           = [subtraction_operator], (expression_in_parenthesis | number | matrix | matrix3d | init_statement | reference_or_call);
 expression_in_parenthesis = "(", expression, ")";
@@ -53,12 +54,11 @@ negation_operator       = "!";
 member_operator         = ".";
 alternative_operator    = "or";
 conjunction_operator    = "and";
-matrix_mult_operator    = "@";
 modulo_operator         = "%";
 comparison_operator     = "<" | ">" | "<=" | ">=" | "==" | "!=";
 additive_operator       = "+" | subtraction_operator;
 subtraction_operator    = "-";
-multiplicative_operator = "*" | "/";
+multiplicative_operator = "*" | "/" | "@";
 assignment_operator     = "=";
 of_operator             = "of";
 new_operator            = "newop";
