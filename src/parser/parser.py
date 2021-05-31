@@ -17,12 +17,12 @@ class Parser:
 
         function_definition = self.parse_function_definition()
         operator_definition = self.parse_operator_definition()
-        while function_definition or operator_definition or self._token.type == TokenType.COMMENT:
+        while function_definition:=self.parse_function_definition() or operator_definition:=self.parse_operator_definition() or self._token.type == TokenType.COMMENT:
             if function_definition:
                 function_definitions.append(function_definition)
-            elif operator_definition:
+            if operator_definition:
                 operator_definitions.append(operator_definition)
-            else:
+            if self._token.type == TokenType.COMMENT:
                 comments.append(self._token.value)
                 self.get_next_token()
             function_definition = self.parse_function_definition()
@@ -416,7 +416,7 @@ class Parser:
             return ComparisonCondition(condition1, operator, condition2)
         return ComparisonCondition(condition1)
 
-    def parse_base_condition(self):
+    def parse_base_condition(self):# if ((a+b)<c) ..
         negation = self._token.type == TokenType.NOT
         if negation:
             self.get_next_token()
@@ -463,3 +463,4 @@ class Parser:
 
     def get_next_token(self):
         self._token = self.__lexer.get_next_token()
+        # obsaługa komentarzy tu

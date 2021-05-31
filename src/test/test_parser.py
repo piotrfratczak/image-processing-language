@@ -439,3 +439,9 @@ def test_if_else_if_else_statement():
     assert isinstance(if_statement.else_block.statements[0], IfStatement)
     assert isinstance(if_statement.else_block.statements[0].block, Block)
     assert isinstance(if_statement.else_block.statements[0].else_block, Block)
+
+
+def test_exp(): # TODO arithmetic expression
+    parser = new_parser('(a+b)<c')
+    expr = parser.parse_condition()
+    assert isinstance(expr, Condition)
