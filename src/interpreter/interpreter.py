@@ -13,7 +13,7 @@ class Interpreter(Visitor):
         self.parser.parse_program()
         self.parser.program.accept(self)
         
-    def visit_program(self, program: Program):
+    def visit_program(self, program: Program): # przymuje definicje -> dopiro wywołanie odwiedza function_definition
         main_function = None
         for function_definition in program.function_definitions:
             function_definition.accept(self)
@@ -33,7 +33,7 @@ class Interpreter(Visitor):
     def visit_function_definition(self, function_definition: FunctionDefinition):
         self.scope_manager.add_function(function_definition.id, function_definition)
 
-    def visit_block(self, block: Block):
+    def visit_block(self, block: Block): # new scope tutaj
         for statement in block.statements:
             statement.accept(self)
             if self.scope_manager.return_result is not None:
@@ -65,6 +65,8 @@ class Interpreter(Visitor):
         function_call.argument_list.accept(self)
         arguments = self.scope_manager.last_result
         self.execute_function(function, arguments)
+        self.scope_manager.last_result = self.scope_manager.return_result
+        self.scope_manager.return_result = None
 
     def visit_argument_list(self, argument_list: ArgumentList):
         arguments = []
@@ -124,7 +126,7 @@ class Interpreter(Visitor):
             expression.accept(self)
             if operator == TokenType.MULTIPLY:
                 result.value *= self.scope_manager.last_result.value
-            elif operator == TokenType.DIVIDE:
+            elif operator == TokenType.DIVIDE: # dzielenie przez 0
                 result.value /= self.scope_manager.last_result.value
             elif operator == TokenType.SPECIAL_MULTIPLY:
                 if not isinstance(result, Matrix) and isinstance(self.scope_manager.last_result, Matrix):
@@ -270,7 +272,7 @@ class Interpreter(Visitor):
             indices.append(self.scope_manager.last_result)
 
     def execute_function(self, function, arguments):
-        if function.id == 'print':
+        if function.id == 'print': # opakowanie w function_definition
             result_string = ''
             for argument in arguments:
                 result_string += str(argument)
