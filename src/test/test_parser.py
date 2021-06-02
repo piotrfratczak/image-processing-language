@@ -103,7 +103,7 @@ def test_program():
     assert isinstance(parser.program, Program)
     assert len(parser.program.function_definitions) == 1
     assert len(parser.program.operator_definitions) == 0
-    assert len(parser.program.comments) == 0
+    assert len(parser.program.comments) == 1
 
 
 def test_comment():
@@ -157,7 +157,7 @@ def test_expression_in_parenthesis():
     parser = new_parser('(a+b)')
     expression = parser.parse_expression_in_parenthesis()
     assert isinstance(expression, ExpressionInParenthesis)
-    assert isinstance(expression.expression, Expression)
+    assert isinstance(expression.expression, LogicalExpression)
 
 
 def test_simple_matrix():
@@ -261,9 +261,9 @@ def test_elaborate_condition():
     
 def test_condition_in_parenthesis():
     parser = new_parser('(a > b)')
-    condition = parser.parse_condition_in_parenthesis()
-    assert isinstance(condition, ConditionInParenthesis)
-    assert isinstance(condition.condition, Condition)
+    condition = parser.parse_expression_in_parenthesis()
+    assert isinstance(condition, ExpressionInParenthesis)
+    assert isinstance(condition.expression, Condition)
 
 
 def test_function_definition():
@@ -441,7 +441,8 @@ def test_if_else_if_else_statement():
     assert isinstance(if_statement.else_block.statements[0].else_block, Block)
 
 
-def test_exp(): # TODO arithmetic expression
+def test_condition_with_expression_in_parenthesis():
     parser = new_parser('(a+b)<c')
-    expr = parser.parse_condition()
-    assert isinstance(expr, Condition)
+    condition = parser.parse_condition()
+    assert isinstance(condition, Condition)
+    assert isinstance(condition.and_conditions[0], ComparisonCondition)

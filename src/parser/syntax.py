@@ -24,24 +24,19 @@ class Expression:
         self.additive_operators = additive_operators
 
 
-class ConditionInParenthesis:
-    def __init__(self, condition):
-        self.condition = condition
-
-
-class BaseCondition:
+class LogicalExpression:
     def __init__(self, expression, negation_operator: bool = False):
         self.negation_operator = negation_operator
         self.expression = expression
 
 
-class ComparisonCondition:
-    def __init__(self, base_condition: BaseCondition,
-                 comparison_operator=None,
-                 base_condition2: BaseCondition = None):
-        self.base_condition = base_condition
+class ComparisonCondition: # might make arguments obligatory
+    def __init__(self, logical_expression: LogicalExpression,
+                 comparison_operator,
+                 logical_expression2: LogicalExpression):
+        self.logical_expression = logical_expression
         self.comparison_operator = comparison_operator
-        self.base_condition2 = base_condition2
+        self.logical_expression2 = logical_expression2
 
 
 class AndCondition:
@@ -57,11 +52,14 @@ class Condition:
 class ArgumentList:
     def __init__(self, expressions: List[Expression]):
         self.expressions = expressions
+        self.length = len(expressions)
 
 
 class Matrix:
     def __init__(self, rows: List[ArgumentList]):
         self.rows = rows
+        self.rows_number = len(rows)
+        self.columns_number = rows[0].length
 
 
 class Matrix3d:
