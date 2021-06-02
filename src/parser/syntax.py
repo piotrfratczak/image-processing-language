@@ -51,15 +51,7 @@ class Expression(Node):
         visitor.visit_expression(self)
 
 
-class ConditionInParenthesis(Node):
-    def __init__(self, condition):
-        self.condition = condition
-
-    def accept(self, visitor: Interpreter):
-        visitor.visit_condition_in_parenthesis(self)
-
-
-class BaseCondition(Node):
+class LogicalExpression:
     def __init__(self, expression, negation_operator: bool = False):
         self.negation_operator = negation_operator
         self.expression = expression
@@ -68,13 +60,13 @@ class BaseCondition(Node):
         visitor.visit_base_condition(self)
 
 
-class ComparisonCondition(Node):
-    def __init__(self, base_condition: BaseCondition,
-                 comparison_operator=None,
-                 base_condition2: BaseCondition = None):
-        self.base_condition = base_condition
+class ComparisonCondition:
+    def __init__(self, logical_expression: LogicalExpression,
+                 comparison_operator,
+                 logical_expression2: LogicalExpression):
+        self.logical_expression = logical_expression
         self.comparison_operator = comparison_operator
-        self.base_condition2 = base_condition2
+        self.logical_expression2 = logical_expression2
 
     def accept(self, visitor: Interpreter):
         visitor.visit_comparison_condition(self)
@@ -108,6 +100,8 @@ class ArgumentList(Node):
 class Matrix(Node):
     def __init__(self, rows: List[ArgumentList]):
         self.rows = rows
+        self.rows_number = len(rows)
+        self.columns_number = rows[0].length
 
     def accept(self, visitor: Interpreter):
         visitor.visit_matrix(self)

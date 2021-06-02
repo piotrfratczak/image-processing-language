@@ -8,27 +8,25 @@ class Parser:
         self.program = None
         self.__lexer = lexer
         self._token = None
+        self._comments = []
         self.get_next_token()
 
     def parse_program(self):
         function_definitions = []
         operator_definitions = []
-        comments = []
 
         function_definition = self.parse_function_definition()
         operator_definition = self.parse_operator_definition()
-        while function_definition or operator_definition or self._token.type == TokenType.COMMENT:
+        while function_definition or operator_definition:
             if function_definition:
                 function_definitions.append(function_definition)
-            elif operator_definition:
+            if operator_definition:
                 operator_definitions.append(operator_definition)
-            else:
-                comments.append(self._token.value)
-                self.get_next_token()
+
             function_definition = self.parse_function_definition()
             operator_definition = self.parse_operator_definition()
 
-        self.program = Program(function_definitions, operator_definitions, comments)
+        self.program = Program(function_definitions, operator_definitions, self._comments)
 
     def parse_function_definition(self):
         id_token = self.parse_next_token(TokenType.ID)
@@ -70,10 +68,6 @@ class Parser:
         statement = self.parse_assignment_or_call()
         if statement:
             return statement
-        if self._token.type == TokenType.COMMENT:
-            comment = self._token.value
-            self.get_next_token()
-            return comment
 
         return None
 
@@ -277,9 +271,16 @@ class Parser:
         matrix = self.parse_matrix()
         self.try_or_exception(matrix, "Matrix array is has no matrices")
         matrices = [matrix]
+        rows_number = matrix.rows_number
+        columns_number = matrix.columns_number
         while self.parse_next_token(TokenType.COMMA):
             matrix = self.parse_matrix()
             self.try_or_exception(matrix, "Matrix array is missing another matrix after ','")
+            self.try_or_exception(matrix.rows_number == rows_number and matrix.columns_number == columns_number,
+                                  "All matrices must have the same dimensions in a 3D matrix."
+                                  " First matrix is {} by {}, matrix number {} is {} by {}"
+                                  .format(rows_number, columns_number, len(matrices)+1,
+                                          matrix.rows_number, matrix.columns_number))
             matrices.append(matrix)
         self.try_or_exception(TokenType.R_BRACE, "Matrix array is missing a closing brace")
         return Matrix3d(matrices)
@@ -290,9 +291,14 @@ class Parser:
 
         rows = []
         row = self.parse_argument_list()
+        row_length = row.length
         while len(row.expressions) > 0:
             self.try_or_exception(TokenType.SEMICOLON,
                                   "Matrix definition is missing a ';' ending the row number {}".format(len(rows)+1))
+            self.try_or_exception(row.length == row_length,
+                                  "Matrix rows must have the same number of elements."
+                                  " First row has {} elements, row number {} has {} elements"
+                                  .format(row_length, len(rows)+1, row.length))
             rows.append(row)
             row = self.parse_argument_list()
         self.try_or_exception(len(rows) > 0, "Matrix has no values")
@@ -361,7 +367,7 @@ class Parser:
         if len(operators) == 0:
             return expressions[0]
         else:
-            return Expression(expressions, operators)
+            return MultiplicativeExpression(expressions, operators)
 
     def parse_base_expression(self):
         subtraction = self._token.type == TokenType.SUBTRACT
@@ -393,7 +399,7 @@ class Parser:
         if not self.parse_next_token(TokenType.L_PARENTHESIS):
             return None
 
-        expression = self.parse_expression()
+        expression = self.parse_condition()
         self.try_or_exception(expression, "Parenthesis opened without any expression inside")
         self.try_or_exception(TokenType.R_PARENTHESIS, "No closing parenthesis found to enclose the expression")
         return ExpressionInParenthesis(expression)
@@ -408,6 +414,8 @@ class Parser:
             condition = self.parse_and_condition()
             self.try_or_exception(condition, "No logical value after alternative operator 'or'")
             conditions.append(condition)
+        if len(conditions) == 1 and isinstance(condition, LogicalExpression):
+            return condition
         return Condition(conditions)
 
     def parse_and_condition(self):
@@ -420,10 +428,12 @@ class Parser:
             condition = self.parse_comparison_condition()
             self.try_or_exception(condition, "No logical value after conjunction operator 'and'")
             conditions.append(condition)
+        if len(conditions) == 1:
+            return condition
         return AndCondition(conditions)
 
     def parse_comparison_condition(self):
-        condition1 = self.parse_base_condition()
+        condition1 = self.parse_logical_expression()
         if not condition1:
             return None
 
@@ -432,33 +442,21 @@ class Parser:
                 or operator == TokenType.GREATER_THAN or operator == TokenType.GREATER_OR_EQUAL \
                 or operator == TokenType.EQUAL or operator == TokenType.NOT_EQUAL:
             self.get_next_token()
-            condition2 = self.parse_base_condition()
+            condition2 = self.parse_logical_expression()
             self.try_or_exception(condition2,
                                   "Logical expression missing the second logical value after a comparison operator")
             return ComparisonCondition(condition1, operator, condition2)
-        return ComparisonCondition(condition1)
+        return condition1
 
-    def parse_base_condition(self):
+    def parse_logical_expression(self):
         negation = self._token.type == TokenType.NOT
         if negation:
             self.get_next_token()
-        condition = self.parse_condition_in_parenthesis()
-        if condition:
-            return BaseCondition(condition, negation)
         expression = self.parse_expression()
         if expression:
-            return BaseCondition(expression, negation)
-        self.try_or_exception((not negation), "Unary negation operator '!' is missing an operand")
+            return LogicalExpression(expression, negation)
+        self.try_or_exception(negation, "Unary negation operator '!' is missing an operand")
         return None
-
-    def parse_condition_in_parenthesis(self):
-        if not self.parse_next_token(TokenType.L_PARENTHESIS):
-            return None
-
-        condition = self.parse_condition()
-        self.try_or_exception(condition, "Opened parenthesis without any condition inside")
-        self.try_or_exception(TokenType.R_PARENTHESIS, "No closing parenthesis found to enclose the condition")
-        return ConditionInParenthesis(condition)
 
     def try_or_exception(self, predicate, message: str):
         token = self._token
@@ -485,3 +483,7 @@ class Parser:
 
     def get_next_token(self):
         self._token = self.__lexer.get_next_token()
+        # parse comments
+        if self._token.type == TokenType.COMMENT:
+            self._comments.append(self._token.value)
+            self.get_next_token()
