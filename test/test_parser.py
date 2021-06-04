@@ -106,6 +106,19 @@ def test_program():
     assert len(parser.program.comments) == 1
 
 
+def test_program_init():
+    parser = new_parser('main() {'
+                        'a = number(2);'
+                        '# comment\n'
+                        'return 0;'
+                        '}')
+    parser.parse_program()
+    assert isinstance(parser.program, Program)
+    assert len(parser.program.function_definitions) == 1
+    assert len(parser.program.operator_definitions) == 0
+    assert len(parser.program.comments) == 1
+
+
 def test_comment():
     comment_str = '#comment'
     parser = new_parser(comment_str)
@@ -221,10 +234,10 @@ def test_multiple_matrices_3dmatrix():
 def test_expression():
     parser = new_parser(' a * b + c ')
     expression = parser.parse_expression()
-    assert isinstance(expression, Expression)
+    assert isinstance(expression, AdditiveExpression)
     assert len(expression.additive_operators) == 1
     assert expression.additive_operators[0] == TokenType.ADD
-    assert expression.multiplicative_expressions
+    assert len(expression.multiplicative_expressions) == 2
 
 
 def test_simple_block():
@@ -370,7 +383,7 @@ def test_assignment_with_reference():
     parser = new_parser('a.b = 7;')
     assignment = parser.parse_assignment_or_call()
     assert isinstance(assignment, Assignment)
-    assert assignment.id is None
+    assert assignment.id == 'a'
     assert isinstance(assignment.reference, Reference)
     assert assignment.reference.id1 == 'a'
     assert assignment.reference.id2 == 'b'
@@ -402,6 +415,19 @@ def test_if_else_statement():
                         '} else {'
                         '   b = 5;'
                         '}')
+    if_statement = parser.parse_if_statement()
+    assert isinstance(if_statement, IfStatement)
+    assert isinstance(if_statement.condition, Condition)
+    assert isinstance(if_statement.block, Block)
+    assert isinstance(if_statement.else_block, Block)
+
+
+def test_if_else_statement_no_braces():
+    parser = new_parser('if (a > b)'
+                        '   b = 100;'
+                        'else '
+                        '   b = 5;'
+                        )
     if_statement = parser.parse_if_statement()
     assert isinstance(if_statement, IfStatement)
     assert isinstance(if_statement.condition, Condition)

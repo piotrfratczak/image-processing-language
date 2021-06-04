@@ -43,10 +43,12 @@ class Lexer:
         value = 0
         if self.__source.char != '0':
             value = int(self.__source.char)
+            if value > self.__max_number:
+                raise NumberTooLargeException(self.__source.position, value)
             while self.get_next_char().isdigit():
+                value = value*10 + int(self.__source.char)
                 if value > self.__max_number:
                     raise NumberTooLargeException(self.__source.position, value)
-                value = value*10 + int(self.__source.char)
         else:
             self.get_next_char()
 

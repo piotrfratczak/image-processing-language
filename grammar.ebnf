@@ -11,11 +11,11 @@ argument_list             = [ expression, {",", expression} ];
 parameter_list            = [ id, {",", id} ];
 
 if_statement              = "if", "(", condition, ")", block , ["else", block];
-init_statement            = type, "(", argument_list, ")", ";";
+init_statement            = type, "(", argument_list, ")";
 return_statement          = "return", [expression], ";";
 block                     = statement | ( "{", {statement}, "}" );
 
-assignment_or_call        = id, ( rest_of_function_call | ([rest_of_reference], rest_of_assignment) ), ";";
+assignment_or_call        = id, ( matrix_lookup | rest_of_function_call | ([rest_of_reference], rest_of_assignment) ), ";";
 rest_of_assignment        = assignment_operator, expression;
 matrix_lookup             = "[", expression, {",", expression}, "]";
 rest_of_reference         = member_operator, id ;
@@ -53,11 +53,10 @@ negation_operator       = "!";
 member_operator         = ".";
 alternative_operator    = "or";
 conjunction_operator    = "and";
-modulo_operator         = "%";
 comparison_operator     = "<" | ">" | "<=" | ">=" | "==" | "!=";
 additive_operator       = "+" | subtraction_operator;
 subtraction_operator    = "-";
-multiplicative_operator = "*" | "/" | "@";
+multiplicative_operator = "*" | "/" | "@" | "%";
 assignment_operator     = "=";
 of_operator             = "of";
 new_operator            = "newop";

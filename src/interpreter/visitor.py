@@ -1,6 +1,4 @@
-from .variables import *
 from ..parser.syntax import *
-from ..lexer.token_type import *
 
 
 class Visitor:
@@ -67,10 +65,7 @@ class Visitor:
     def visit_additive_expression(self, additive_expression: AdditiveExpression):
         pass
 
-    def visit_condition_in_parenthesis(self, condition_in_parenthesis: ConditionInParenthesis):
-        pass
-
-    def visit_base_condition(self, base_condition: BaseCondition):
+    def visit_logical_expression(self, logical_expression: LogicalExpression):
         pass
 
     def visit_comparison_condition(self, comparison_condition: ComparisonCondition):
@@ -81,9 +76,3 @@ class Visitor:
 
     def visit_argument_list(self, argument_list: ArgumentList):
         pass
-
-
-def check_type(variable, expected_type):
-    return (isinstance(variable, NumberVariable) and expected_type == TokenType.NUMBER_TYPE) or \
-           (isinstance(variable, PixelVariable) and expected_type == TokenType.PIXEL) or \
-           (isinstance(variable, MatrixVariable) and expected_type == TokenType.MATRIX)

@@ -1,0 +1,5 @@
+main() {
+    a = matrix(2,4,3);
+    print(a);
+    return;
+}

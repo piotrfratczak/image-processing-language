@@ -135,7 +135,6 @@ class Parser:
         arguments = self.parse_argument_list()
         self.try_or_exception(arguments, "Initiation of a variable is missing arguments")
         self.try_or_exception(TokenType.R_PARENTHESIS, "Initiation of a variable is missing a closing parenthesis")
-        self.try_or_exception(TokenType.SEMICOLON, "Initiation of a variable is missing a semicolon a the end")
         return InitStatement(_type, arguments)
 
     def parse_return_statement(self):
@@ -174,7 +173,8 @@ class Parser:
             return function_call
 
         reference = self.parse_reference(_id)
-        assignment = self.parse_assignment(_id, reference)
+        matrix_lookup = self.parse_matrix_lookup(_id)
+        assignment = self.parse_assignment(_id, reference, matrix_lookup)
         self.try_or_exception(assignment, "{} is not a part of any function definition nor any assignment".format(_id))
         self.try_or_exception(TokenType.SEMICOLON, "No semicolon after an assignment")
         return assignment
@@ -187,15 +187,13 @@ class Parser:
         id2 = id2_token.value
         return Reference(id1, id2)
 
-    def parse_assignment(self, _id=None, reference=None):
+    def parse_assignment(self, _id=None, reference=None, matrix_lookup=None):
         if not self.parse_next_token(TokenType.ASSIGN):
             return None
 
         expression = self.parse_expression()
         self.try_or_exception(expression, "Assignment is missing assigned value")
-        if reference:
-            return Assignment(expression, reference=reference)
-        return Assignment(expression, _id=_id)
+        return Assignment(expression, _id, reference, matrix_lookup)
 
     def parse_matrix_lookup(self, _id):
         if not self.parse_next_token(TokenType.L_BRACKET):
@@ -357,7 +355,8 @@ class Parser:
         operators = []
         expressions.append(expression)
         operator = self._token.type
-        while operator == TokenType.MULTIPLY or operator == TokenType.DIVIDE or operator == TokenType.SPECIAL_MULTIPLY:
+        while operator == TokenType.MULTIPLY or operator == TokenType.DIVIDE or\
+                operator == TokenType.SPECIAL_MULTIPLY or operator == TokenType.MODULO:
             self.get_next_token()
             expression = self.parse_base_expression()
             self.try_or_exception(expression, "Expression is missing arguments after an operator")
