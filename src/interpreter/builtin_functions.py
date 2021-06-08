@@ -1,4 +1,4 @@
-from copy import copy
+from copy import deepcopy
 from random import random
 from ..parser.syntax import Callable
 from .variables import NumberVariable, PixelVariable, MatrixVariable
@@ -11,7 +11,7 @@ class PrintFunction(Callable):
         self.argument_list = None
 
     def verify_arguments(self, arguments):
-        self.argument_list = copy(arguments)
+        self.argument_list = deepcopy(arguments)
         return True
 
     def accept(self, visitor):
@@ -69,7 +69,7 @@ class DeterminantFunction(Callable):
         #      call this function
         for fc in indices:  # m) for each focus column, ...
             # find the submatrix ...
-            ms = copy(m)  # B) make a copy, and ...
+            ms = deepcopy(m)  # B) make a copy, and ...
             ms = ms[1:]  # ... C) remove the first row
             height = len(ms)  # D)
 

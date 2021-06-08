@@ -45,8 +45,8 @@ class Parser:
         self.try_or_exception(TokenType.R_PARENTHESIS, "Function definition is missing a closing parenthesis")
         block = self.parse_block()
         self.try_or_exception(block, "Function definition is missing its body")
-        self.try_or_exception(isinstance(block.statements[-1], ReturnStatement),
-                              "Function body is missing a return statement at the end")
+        self.try_or_exception(self.verify_return_statements(block),
+                              "Function body is missing a return statement")
         return FunctionDefinition(id_token.value, parameters, block)
 
     def parse_statement(self):
@@ -486,3 +486,16 @@ class Parser:
         if self._token.type == TokenType.COMMENT:
             self._comments.append(self._token.value)
             self.get_next_token()
+
+    def verify_return_statements(self, block: Block):
+        for statement in block.statements:
+            if isinstance(statement, ReturnStatement):
+                return True
+
+            if isinstance(statement, IfStatement):
+                result = self.verify_return_statements(statement.block)
+                if statement.else_block is None:
+                    return result
+                else:
+                    return result and self.verify_return_statements(statement.else_block)
+        return False

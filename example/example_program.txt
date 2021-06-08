@@ -1,5 +1,46 @@
 main() {
-    a = matrix(2,4,3);
-    print(a);
+
+
+    m1 = [1, 2, 3;
+          4, 3, 6;
+          7, 2, 9;];
+
+    ret_foo = foo(m1 * 3);
+    print(ret_foo);
+    print(m1);
+
+    ret_fif = fif();
+    print(ret_fif);
+
+    break(m1 * 4);
+    print(m1);
+
+
+
     return;
+
+
+foo(m) {
+    while(m[0,0] >=1) {
+        return 5;
+    }
+
+    return 1;
+}
+
+fif() {
+   if (2 < 1) {
+       return 3;
+   } else {
+       if (2<1){
+           return 2;
+       } else {
+           return 1;
+       }
+   }
+}
+
+break(m) {
+    a = m/0;
+    return 1;
 }

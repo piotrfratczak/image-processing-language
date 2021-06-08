@@ -1183,3 +1183,58 @@ def test_program_builtin_det_3by3():
                                   )
     returned = interpreter.interpret()
     assert returned == -5
+
+
+def test_return_from_if():
+    interpreter = new_interpreter('main() {'
+                                  '     return foo();'
+                                  '}'
+                                  ''
+                                  'foo() {'
+                                  '     if (2 < 1) {'
+                                  '         return 3;'
+                                  '     } else {'
+                                  '         if (2<1){'
+                                  '             return 2;'
+                                  '         } else {'
+                                  '             return 1;'
+                                  '         }'
+                                  '     }'
+                                  '}'
+                                  )
+    returned = interpreter.interpret()
+    assert returned == 1
+
+
+def test_return_from_while():
+    interpreter = new_interpreter('main() {'
+                                  '     return foo(3);'
+                                  '}'
+                                  ''
+                                  'foo(a) {'
+                                  '     while (a<2) {'
+                                  '         return a;'
+                                  '     }'
+                                  '     return 5;'
+                                  '}'
+                                  )
+    returned = interpreter.interpret()
+    assert returned == 5
+
+
+def test_return_from_for():
+    interpreter = new_interpreter('main() {'
+                                  '     return foo(0);'
+                                  '}'
+                                  ''
+                                  'foo(a) {'
+                                  '     i = 0;'
+                                  '     for (g in 3) {'
+                                  '         a = a + 1;'
+                                  '         return a;'
+                                  '     }'
+                                  '     return 10;'
+                                  '}'
+                                  )
+    returned = interpreter.interpret()
+    assert returned == 1

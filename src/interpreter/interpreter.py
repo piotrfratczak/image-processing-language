@@ -14,8 +14,13 @@ class Interpreter(Visitor):
 
     def interpret(self):
         self.__load_built_in_functions()
-        self.parser.parse_program()
-        self.parser.program.accept(self)
+        try:
+            self.parser.parse_program()
+            self.parser.program.accept(self)
+        except Exception as exc:
+            print("\n{}".format(exc))
+            return -1
+
         return self.__return_result()
         
     def visit_program(self, program: Program):
@@ -46,10 +51,10 @@ class Interpreter(Visitor):
             if_statement.else_block.accept(self)
 
     def visit_while_loop(self, while_loop: WhileLoop):
-        while_loop.condition.accept(self)
-        while self.scope_manager.last_result is True:
+        while while_loop.condition.accept(self) and self.scope_manager.last_result is True:
             while_loop.block.accept(self)
-            while_loop.condition.accept(self)
+            if self.scope_manager.return_result is not None:
+                return
 
     def visit_for_loop(self, for_loop: ForLoop):
         for_iterator = 0
@@ -66,6 +71,8 @@ class Interpreter(Visitor):
             iterator_variable.value = for_iterator
             self.scope_manager.add_update_variable(for_loop.iterator, iterator_variable)
             for_loop.block.accept(self)
+            if self.scope_manager.return_result is not None:
+                return
             for_iterator += 1
 
     def visit_function_call(self, function_call: FunctionCall):
@@ -114,7 +121,7 @@ class Interpreter(Visitor):
             self.scope_manager.last_result = NumberVariable('', sign * base_expression.expression)
         elif isinstance(base_expression.expression, str):
             variable = self.scope_manager.get_variable(base_expression.expression)
-            self.scope_manager.last_result = copy(variable)
+            self.scope_manager.last_result = deepcopy(variable)
         elif isinstance(base_expression.expression, Matrix) or\
                 isinstance(base_expression.expression, Matrix3d) or\
                 isinstance(base_expression.expression, InitStatement) or\
@@ -422,8 +429,8 @@ class Interpreter(Visitor):
 
     def __execute_function(self, function, arguments):
         if not function.verify_arguments(arguments):
-            raise InvalidArgumentsNumberException("To call " + function.id + " " + len(function.parameter_list) +
-                                                  "arguments were expected.", len(arguments))
+            raise InvalidArgumentsNumberException("To call " + function.id + " " + str(len(function.parameter_list)) +
+                                                  " arguments were expected.", len(arguments))
         self.scope_manager.switch_to_new_scope(function.id)
         for argument, parameter in zip(arguments, function.parameter_list):
             self.scope_manager.add_variable(parameter, argument)

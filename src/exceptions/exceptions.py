@@ -58,7 +58,7 @@ class TypeMismatchError(Exception):
         self.__variable = variable
         self.__expected = expected
         self.__actual = actual
-        self.__message = "Semantic Exception. Type mismatch of {} - expected {} but received {}."\
+        self.__message = "Semantic Exception. Type mismatch of {} - expected {} but received {}." \
             .format(self.__variable, self.__expected, self.__actual)
 
         super().__init__(self.__message)
@@ -114,7 +114,7 @@ class InvalidArgumentsNumberException(Exception):
         self.__initial_message = initial_message
         self.__actual = actual
         self.__message = "Invalid Arguments Number Exception. {} Received {} arguments.".format(self.__initial_message,
-                                                                                                        self.__actual)
+                                                                                                self.__actual)
         super().__init__(self.__message)
 
 
@@ -132,7 +132,7 @@ class ComparisonTypeMismatchException(Exception):
         self.__expected = expected
         self.__actual = actual
         self.__comparison = comparison
-        self.__message = "Compared Types Mismatch Exception. {} and {} must not be compared with {}."\
+        self.__message = "Compared Types Mismatch Exception. {} and {} must not be compared with {}." \
             .format(self.__expected, self.__actual, self.__comparison)
 
         super().__init__(self.__message)
@@ -165,4 +165,3 @@ class ZeroDivisionException(Exception):
         self.__message = "Division by 0 is illegal!"
 
         super().__init__(self.__message)
-

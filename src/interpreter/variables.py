@@ -1,5 +1,5 @@
 from typing import List
-from copy import copy
+from copy import deepcopy
 from ..exceptions.exceptions import MatrixDimensionsException
 
 
@@ -36,7 +36,7 @@ class NumberVariable(Variable):
             return NumberVariable(self.name + '+' + other.name,
                                   self.value + other.value)
 
-        new_variable = copy(other)
+        new_variable = deepcopy(other)
         new_variable.name = other.name + '+' + self.name
         new_variable.add_value(self.value)
         return new_variable
@@ -52,7 +52,7 @@ class NumberVariable(Variable):
             return NumberVariable(self.name + '*' + other.name,
                                   self.value * other.value)
 
-        new_variable = copy(other)
+        new_variable = deepcopy(other)
         new_variable.name = other.name + '*' + self.name
         new_variable.multiply_by_value(self.value)
         return new_variable
@@ -168,7 +168,7 @@ class PixelVariable(Variable):
         if not isinstance(other, PixelVariable):
             return None
 
-        new_pixel = copy(other)
+        new_pixel = deepcopy(other)
         new_pixel.name = other.name + '+' + self.name
         new_pixel.set_r(other.r + self.r)
         new_pixel.set_g(other.g + self.g)
@@ -177,13 +177,13 @@ class PixelVariable(Variable):
 
     def __sub__(self, other):
         if isinstance(other, NumberVariable):
-            new_pixel = copy(self)
+            new_pixel = deepcopy(self)
             new_pixel.add_value(-other.value)
             return new_pixel
         if not isinstance(other, PixelVariable):
             return None
 
-        new_pixel = copy(other)
+        new_pixel = deepcopy(other)
         new_pixel.name = self.name + '-' + other.name
         new_pixel.set_r(self.r - other.r)
         new_pixel.set_g(self.g - other.g)
@@ -196,7 +196,7 @@ class PixelVariable(Variable):
         if not isinstance(other, PixelVariable):
             return None
 
-        new_pixel = copy(other)
+        new_pixel = deepcopy(other)
         new_pixel.name = other.name + '*' + self.name
         new_pixel.set_r(other.r * self.r)
         new_pixel.set_g(other.g * self.g)
@@ -205,7 +205,7 @@ class PixelVariable(Variable):
 
     def __truediv__(self, other):
         if isinstance(other, NumberVariable):
-            new_pixel = copy(self)
+            new_pixel = deepcopy(self)
             new_pixel.name = self.name + '/' + other.name
             new_pixel.divide_by_value(other.value)
             return new_pixel
@@ -213,7 +213,7 @@ class PixelVariable(Variable):
         if not isinstance(other, PixelVariable):
             return None
 
-        new_pixel = copy(other)
+        new_pixel = deepcopy(other)
         new_pixel.name = self.name + '/' + other.name
         new_pixel.set_r(self.r / other.r)
         new_pixel.set_g(self.g / other.g)
@@ -222,7 +222,7 @@ class PixelVariable(Variable):
 
     def __mod__(self, other):
         if isinstance(other, NumberVariable):
-            new_pixel = copy(self)
+            new_pixel = deepcopy(self)
             new_pixel.name = self.name + '%' + other.name
             new_pixel.modulo_with_value(other.value)
             return new_pixel
@@ -230,7 +230,7 @@ class PixelVariable(Variable):
         if not isinstance(other, PixelVariable):
             return None
 
-        new_pixel = copy(other)
+        new_pixel = deepcopy(other)
         new_pixel.name = self.name + '%' + other.name
         new_pixel.set_r(self.r % other.r)
         new_pixel.set_g(self.g % other.g)
@@ -331,7 +331,7 @@ class MatrixVariable(Variable):
             if self.xdim != other.xdim or self.ydim != other.ydim:
                 raise MatrixDimensionsException(str(self.xdim) + ' by ' + str(self.ydim),
                                                 str(other.xdim) + ' by ' + str(other.ydim))
-            new_matrix = copy(other)
+            new_matrix = deepcopy(other)
             new_matrix.name = self.name + '+' + other.name
             for i in range(new_matrix.zdim):
                 new_matrix.matrices[i] += self
@@ -353,7 +353,7 @@ class MatrixVariable(Variable):
 
     def __sub__(self, other):
         if isinstance(other, NumberVariable):
-            number = copy(other)
+            number = deepcopy(other)
             number.value = -number.value
             return number + self
 
@@ -361,7 +361,7 @@ class MatrixVariable(Variable):
             if self.xdim != other.xdim or self.ydim != other.ydim:
                 raise MatrixDimensionsException(str(self.xdim) + ' by ' + str(self.ydim),
                                                 str(other.xdim) + ' by ' + str(other.ydim))
-            new_matrix = copy(other)
+            new_matrix = deepcopy(other)
             new_matrix.name = self.name + '-' + other.name
             for i in range(new_matrix.zdim):
                 new_matrix.matrices[i] -= self
@@ -406,7 +406,7 @@ class MatrixVariable(Variable):
 
     def __truediv__(self, other):
         if isinstance(other, NumberVariable):
-            new_matrix = copy(self)
+            new_matrix = deepcopy(self)
             new_matrix.name = self.name + '/' + other.name
             new_matrix.divide_by_value(other.value)
             return new_matrix
@@ -414,7 +414,7 @@ class MatrixVariable(Variable):
 
     def __mod__(self, other):
         if isinstance(other, NumberVariable):
-            new_matrix = copy(self)
+            new_matrix = deepcopy(self)
             new_matrix.name = self.name + '%' + other.name
             new_matrix.modulo_with_value(other.value)
             return new_matrix
@@ -508,7 +508,7 @@ class Matrix3dVariable(Variable):
             return other + self
 
         if isinstance(other, MatrixVariable):
-            new_matrix = copy(self)
+            new_matrix = deepcopy(self)
             new_matrix.name = self.name + '+' + other.name
             for m in range(self.zdim):
                 new_matrix.matrices[m] += other
@@ -520,7 +520,7 @@ class Matrix3dVariable(Variable):
         if self.xdim != other.xdim or self.ydim != other.ydim or self.zdim != other.zdim:
             raise MatrixDimensionsException(str(self.xdim) + ' by ' + str(self.ydim),
                                             str(other.xdim) + ' by ' + str(other.ydim),)
-        new_matrix = copy(self)
+        new_matrix = deepcopy(self)
         new_matrix.name = self.name + '+' + other.name
         for m in range(self.zdim):
             new_matrix.matrices[m] += other.matrices[m]
@@ -528,7 +528,7 @@ class Matrix3dVariable(Variable):
 
     def __sub__(self, other):
         if isinstance(other, MatrixVariable) or isinstance(other, NumberVariable):
-            new_matrix = copy(self)
+            new_matrix = deepcopy(self)
             new_matrix.name = self.name + '-' + other.name
             for m in range(self.zdim):
                 new_matrix.matrices[m] -= other
@@ -540,7 +540,7 @@ class Matrix3dVariable(Variable):
         if self.xdim != other.xdim or self.ydim != other.ydim or self.zdim != other.zdim:
             raise MatrixDimensionsException(str(self.xdim) + ' by ' + str(self.ydim),
                                             str(other.xdim) + ' by ' + str(other.ydim),)
-        new_matrix = copy(self)
+        new_matrix = deepcopy(self)
         new_matrix.name = self.name + '-' + other.name
         for m in range(self.zdim):
             new_matrix.matrices[m] -= other.matrices[m]
@@ -548,7 +548,7 @@ class Matrix3dVariable(Variable):
 
     def __mul__(self, other):
         if isinstance(other, MatrixVariable) or isinstance(other, NumberVariable):
-            new_matrix = copy(self)
+            new_matrix = deepcopy(self)
             new_matrix.name = self.name + '*' + other.name
             for m in range(self.zdim):
                 new_matrix.matrices[m] *= other
@@ -559,7 +559,7 @@ class Matrix3dVariable(Variable):
 
         if self.zdim != other.zdim:
             raise MatrixDimensionsException(str(other.zdim), str(self.zdim))
-        new_matrix = copy(self)
+        new_matrix = deepcopy(self)
         new_matrix.name = self.name + '*' + other.name
         for m in range(self.zdim):
             new_matrix.matrices[m] *= other.matrices[m]
@@ -569,7 +569,7 @@ class Matrix3dVariable(Variable):
         if not isinstance(other, NumberVariable):
             return None
 
-        new_matrix = copy(self)
+        new_matrix = deepcopy(self)
         new_matrix.name = self.name + '/' + other.name
         for m in range(new_matrix.zdim):
             new_matrix.matrices[m] /= other
@@ -579,7 +579,7 @@ class Matrix3dVariable(Variable):
         if not isinstance(other, NumberVariable):
             return None
 
-        new_matrix = copy(self)
+        new_matrix = deepcopy(self)
         new_matrix.name = self.name + '%' + other.name
         for m in range(new_matrix.zdim):
             new_matrix.matrices[m] %= other
